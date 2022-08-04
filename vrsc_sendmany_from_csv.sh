@@ -49,7 +49,8 @@ else
                 break
             fi
             if [[ $counter == 0 ]]; then
-                json=$(jq -n --arg addr $address --arg amt $amount '[{($addr):$amt}]')
+                json=$(jq -n --arg addr $address --arg amt $amount '{($addr):$amt|tonumber}')
+                echo "$json"
                 totalamount=$amount
             else
                 totalamount=$(echo "$totalamount + $amount" | bc)
@@ -57,13 +58,13 @@ else
                         if [[ $excludedcount < 1 ]]; then
                             echo "Available balance ($balance) less than ($totalamount) ..."
                             echo "Entries from <$address> and below will not receive funds!"
-                            excludedjson=$(jq -n --arg addr $address --arg amt $amount '[{($addr):$amt}]')
+                            excludedjson=$(jq -n --arg addr $address --arg amt $amount '{($addr):$amt|tonumber}')
                         else
-                            excludedjson=$(echo $json | jq --arg addr $address --arg amt $amount '. += [{($addr): $amt}]')
+                            excludedjson=$(echo $json | jq --arg addr $address --arg amt $amount '. += {($addr): $amt|tonumber}')
                         fi
                         ((excludedcount++))
                 else
-                    json=$(echo $json | jq --arg addr $address --arg amt $amount '. += [{($addr): $amt}]')
+                    json=$(echo $json | jq --arg addr $address --arg amt $amount '. += {($addr): $amt|tonumber}')
                     echo "$totalamount"
                 fi
             fi
@@ -75,9 +76,14 @@ else
         echo "$excludedjson" > $HOME/excluded_addresses_from_snapshot.json
         echo "Excluded addresses logged to $HOME/excluded_addresses_from_snapshot.json"
 
-        txid=$($cli -chain=$chain sendmany $fromaddr $json)
-        echo "Sendmany attempted... txid = $txid... done"
-
+        sendmany="$cli -chain=$chain sendmany $fromaddr '$json'"
+        echo "$sendmany"
+        txid=$($sendmany)
+        if [[ -z $txid ]]; then
+            echo "Error: Unsuccessful! Something went wrong when calling sendmany"
+        else
+           echo "Sendmany successful... txid = $txid"
+        fi
     else
         echo "File at location $FILE not found, or is a directory etc..."
     fi
