@@ -1,8 +1,8 @@
 #!/bin/bash
+#
 # Bash script designed to distribute funds from a snapshot CSV of positive balance addresses
 # CSV used should be created with https://github.com/who-biz/chipsposbal2csv
 # Written to function with VerusCoin's daemon and CLI
-#
 #
 # @author who-biz
 
@@ -29,6 +29,8 @@ currbal=$($cli -chain=$chain getcurrencybalance $fromaddr)
 balance=$(echo $currbal | jq -r '.chipstensec')
 echo "$balance"
 totalamount=0
+excludedjson=""
+excludedcount=0
 
 if [[ -z "$2" ]]; then
     echo "Error: no csv file supplied."
@@ -38,21 +40,28 @@ else
 
     FILE=$2
     if [[ -f "$FILE" ]]; then
-        echo "Will attempt to parse addresses and balances from $FILE ..."
+        echo "Attempting to parse addresses and balances from $FILE ..."
         counter=0
         while IFS="," read -r address amount lastheight
         do
+            if [[ -z $address || -z $amount ]]; then
+                break
+            fi
             if [[ $counter == 0 ]]; then
                 json=$(jq -n --arg addr $address --arg amt $amount '[{($addr):$amt}]')
                 totalamount=$amount
-#                echo "$json"
                 ((counter++))
             else
                 totalamount=$(echo "$totalamount + $amount" | bc)
                 if (( $(echo "$balance < $totalamount" | bc -l) )); then
-                    echo "Available balance ($balance) less than ($totalamount) ..."
-                    echo "Entries from <$address> and below will not receive funds!"
-                    break
+                        if [[ $excludedcount < 1 ]]; then
+                            echo "Available balance ($balance) less than ($totalamount) ..."
+                            echo "Entries from <$address> and below will not receive funds!"
+                            excludedjson=$(jq -n --arg addr $address --arg amt $amount '[{($addr):$amt}]')
+                        else
+                            excludedjson=$(echo $json | jq --arg addr $address --arg amt $amount '. += [{($addr): $amt}]')
+                        fi
+                        ((excludedcount++))
                 else
                     json=$(echo $json | jq --arg addr $address --arg amt $amount '. += [{($addr): $amt}]')
                     echo "$totalamount"
