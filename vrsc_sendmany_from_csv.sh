@@ -42,6 +42,7 @@ else
     if [[ -f "$FILE" ]]; then
         echo "Attempting to parse addresses and balances from $FILE ..."
         counter=0
+
         while IFS="," read -r address amount lastheight
         do
             if [[ -z $address || -z $amount ]]; then
@@ -50,7 +51,6 @@ else
             if [[ $counter == 0 ]]; then
                 json=$(jq -n --arg addr $address --arg amt $amount '[{($addr):$amt}]')
                 totalamount=$amount
-                ((counter++))
             else
                 totalamount=$(echo "$totalamount + $amount" | bc)
                 if (( $(echo "$balance < $totalamount" | bc -l) )); then
@@ -66,9 +66,18 @@ else
                     json=$(echo $json | jq --arg addr $address --arg amt $amount '. += [{($addr): $amt}]')
                     echo "$totalamount"
                 fi
-                ((counter++))
             fi
+            ((counter++))
         done < <(tail -n +2 $FILE)
+
+        echo "Distributing to snapshot addresses with (sendmany) ..."
+        echo "Excluding a total of $excludedcount addresses from this command."
+        echo "$excludedjson" > $HOME/excluded_addresses_from_snapshot.json
+        echo "Excluded addresses logged to $HOME/excluded_addresses_from_snapshot.json"
+
+        txid=$($cli -chain=$chain sendmany $fromaddr $json)
+        echo "Sendmany attempted... txid = $txid... done"
+
     else
         echo "File at location $FILE not found, or is a directory etc..."
     fi
