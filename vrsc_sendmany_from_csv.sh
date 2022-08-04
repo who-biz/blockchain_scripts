@@ -81,6 +81,6 @@ else
     else
         echo "File at location $FILE not found, or is a directory etc..."
     fi
-    echo "$json"
+    #echo "$json"
 
 fi
