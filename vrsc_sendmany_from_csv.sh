@@ -25,8 +25,8 @@ chain="chipstensec"
 
 if [[ -z "$1" ]]; then
     echo "Error: no arguments supplied."
-#    echo "Usage: \"./vrsc_sendmany_from_csv.sh <from_address> <path_to_file>\""
-    echo "Usage: \"./vrsc_sendmany_from_csv.sh <path_to_file>\""
+    echo "Usage: \"./vrsc_sendmany_from_csv.sh <from_address> <path_to_file>\""
+#    echo "Usage: \"./vrsc_sendmany_from_csv.sh <path_to_file>\""
     echo "Where <from_address> is address for funds to spent from, and <path_to_file> is path to CSV file"
 else
     fromaddr=$1
