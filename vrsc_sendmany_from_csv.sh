@@ -27,6 +27,12 @@ fi
 
 currbal=$($cli -chain=$chain getcurrencybalance $fromaddr)
 balance=$(echo $currbal | jq -r '.chipstensec')
+
+if [[ -z "$balance" ]]; then
+    echo "Could not get balance from daemon.  Please check that your daemon is running and responsive to RPC calls."
+    echo "Exiting..."
+fi
+
 echo "$balance"
 totalamount=0
 excludedjson=""
@@ -50,21 +56,21 @@ else
             fi
             if [[ $counter == 0 ]]; then
                 json=$(jq -n --arg addr $address --arg amt $amount '{($addr):$amt|tonumber}')
-                echo "$json"
+#                echo "$json"
                 totalamount=$amount
             else
-                totalamount=$(echo "$totalamount + $amount" | bc)
-                if (( $(echo "$balance < $totalamount" | bc -l) )); then
+                totalamount=$(echo "$totalamount + $amount" | bc -l)
+                if (( $(echo "$balance < $totalamount" |bc -l) )); then
                         if [[ $excludedcount < 1 ]]; then
                             echo "Available balance ($balance) less than ($totalamount) ..."
                             echo "Entries from <$address> and below will not receive funds!"
                             excludedjson=$(jq -n --arg addr $address --arg amt $amount '{($addr):$amt|tonumber}')
                         else
-                            excludedjson=$(echo $json | jq --arg addr $address --arg amt $amount '. += {($addr): $amt|tonumber}')
+                            excludedjson=$(echo $json | jq --arg addr $address --arg amt $amount '. += {($addr):$amt|tonumber}')
                         fi
                         ((excludedcount++))
                 else
-                    json=$(echo $json | jq --arg addr $address --arg amt $amount '. += {($addr): $amt|tonumber}')
+                    json=$(echo $json | jq --arg addr $address --arg amt $amount '. += {($addr):$amt|tonumber}')
                     echo "$totalamount"
                 fi
             fi
@@ -76,7 +82,8 @@ else
         echo "$excludedjson" > $HOME/excluded_addresses_from_snapshot.json
         echo "Excluded addresses logged to $HOME/excluded_addresses_from_snapshot.json"
 
-        sendmany="$cli -chain=$chain sendmany $fromaddr '$json'"
+        stringizedjson=$(echo $json | jq -sR '.')
+        sendmany="$cli -chain=$chain sendmany $fromaddr $stringizedjson"
         echo "$sendmany"
         txid=$($sendmany)
         if [[ -z $txid ]]; then
@@ -87,6 +94,6 @@ else
     else
         echo "File at location $FILE not found, or is a directory etc..."
     fi
-    #echo "$json"
+#    echo "$json"
 
 fi
