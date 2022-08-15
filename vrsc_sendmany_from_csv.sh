@@ -6,6 +6,10 @@
 #
 # @author who-biz
 
+# The version of jq relied upon in this script is more recent than the latest v1.6 release
+# You must compile https://github.com/stedolan/jq, to avoid automatic conversion of floats
+# in JSON, to scientific notation.  Generated values will show as 8e6, etc.. otherwise
+
 FILE=""
 json=""
 fromaddr=""
@@ -27,7 +31,7 @@ if [[ -z "$1" ]]; then
     echo "Error: no arguments supplied."
     echo "Usage: \"./vrsc_sendmany_from_csv.sh <from_address> <path_to_file>\""
 #    echo "Usage: \"./vrsc_sendmany_from_csv.sh <path_to_file>\""
-    echo "Where <from_address> is address for funds to spent from, and <path_to_file> is path to CSV file"
+    echo "Where <from_address> is address for funds to be spent from, and <path_to_file> is path to CSV file"
 else
     fromaddr=$1
 fi
@@ -48,7 +52,7 @@ excludedcount=0
 if [[ -z "$2" ]]; then
     echo "Error: no csv file supplied."
     echo "Usage: \"./vrsc_sendmany_from_csv.sh <from_address> <path_to_file>\""
-    echo "Where <from_address> is address for funds to spent from, and <path_to_file> is path to CSV file"
+    echo "Where <from_address> is address for funds to be spent from, and <path_to_file> is path to CSV file"
 else
 
     FILE=$2
@@ -61,6 +65,7 @@ else
             if [[ -z $address || -z $amount ]]; then
                 break
             fi
+
             if [[ $counter == 0 ]]; then
                 json=$(jq -n --arg addr $address --arg amt $amount '[{"address":$addr,"amount":$amt|tonumber}]')
 #                echo "$json"
@@ -82,6 +87,7 @@ else
                     echo "$totalamount"
                 fi
             fi
+
             ((counter++))
         done < <(tail -n +2 $FILE)
 
@@ -92,11 +98,9 @@ else
 
         stringizedjson=$(echo $json | jq -sRr '. | sub("\n"; "") | gsub("\\s";"")')
 #        stringizedjson=$(echo $json | jq -sj '.')
-        z_sendmany="$cli -chain=$chain z_sendmany $fromaddr "
-        echo "$stringizedjson"
-        txid=$(curl --data-binary '{"jsonrpc":"1.0","id":"curltest","method":"z_sendmany","params":[$fromaddr,$stringizedjson]}' -H 'content-type:text/plain;' http://$rpcuser:$rpcpass@127.0.0.1:$port/)
-#        echo "$sendmany"
-#        txid=$(echo -e "$stringizedjson" | $sendmany)
+        z_sendmany="$cli -chain=$chain -stdin z_sendmany $fromaddr"
+        echo "$z_sendmany"
+        txid=$(echo "$stringizedjson" | $z_sendmany)
         if [[ -z $txid ]]; then
             echo "Error: Unsuccessful! Something went wrong when calling sendmany"
         else
