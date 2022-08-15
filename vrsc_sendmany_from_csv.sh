@@ -21,7 +21,7 @@ rpcpass=""
 
 # change this location of verus cli, bitcoin-cli, etc
 # example cli="$HOME/VerusCoin/src/verus"
-cli="$HOME/chips10sec/src/verus"
+cli="$HOME/chips-10sec/src/verus"
 
 # change this to relevant chain, ac_name, etc
 # example: chain="-chain=vrsctest"
@@ -91,7 +91,7 @@ else
             ((counter++))
         done < <(tail -n +2 $FILE)
 
-        echo "Distributing to snapshot addresses with (sendmany) ..."
+        echo "Distributing to snapshot addresses with (z_sendmany) ..."
         echo "Excluding a total of $excludedcount addresses from this command."
         echo "$excludedjson" > $HOME/excluded_addresses_from_snapshot.json
         echo "Excluded addresses logged to $HOME/excluded_addresses_from_snapshot.json"
@@ -102,9 +102,9 @@ else
         echo "$z_sendmany"
         txid=$(echo "$stringizedjson" | $z_sendmany)
         if [[ -z $txid ]]; then
-            echo "Error: Unsuccessful! Something went wrong when calling sendmany"
+            echo "Error: Unsuccessful! Something went wrong when calling z_sendmany"
         else
-           echo "Sendmany successful... txid = $txid"
+           echo "z_sendmany successful... operation id = $txid"
         fi
     else
         echo "File at location $FILE not found, or is a directory etc..."
