@@ -5,10 +5,8 @@
 # Written to function with VerusCoin's daemon and CLI
 #
 # @author who-biz
-
-# The version of jq relied upon in this script is more recent than the latest v1.6 release
-# You must compile https://github.com/stedolan/jq, to avoid automatic conversion of floats
-# in JSON, to scientific notation.  Generated values will show as 8e6, etc.. otherwise
+#
+# newer jq version no longer required
 
 FILE=""
 json=""
@@ -16,8 +14,8 @@ fromaddr=""
 port=12122
 
 # change below to relevant rpc user/pass if using curl
-rpcuser=""
-rpcpass=""
+#rpcuser=""
+#rpcpass=""
 
 # change this location of verus cli, bitcoin-cli, etc
 # example cli="$HOME/VerusCoin/src/verus"
@@ -30,7 +28,6 @@ chain="chipstensec"
 if [[ -z "$1" ]]; then
     echo "Error: no arguments supplied."
     echo "Usage: \"./vrsc_sendmany_from_csv.sh <from_address> <path_to_file>\""
-#    echo "Usage: \"./vrsc_sendmany_from_csv.sh <path_to_file>\""
     echo "Where <from_address> is address for funds to be spent from, and <path_to_file> is path to CSV file"
 else
     fromaddr=$1
@@ -67,7 +64,7 @@ else
             fi
 
             if [[ $counter == 0 ]]; then
-                json=$(jq -n --arg addr $address --arg amt $amount '[{"address":$addr,"amount":$amt|tonumber}]')
+                json=$(jq -n --arg addr $address --arg amt $amount '[{"address":$addr,"amount":$amt}]')
 #                echo "$json"
                 totalamount=$amount
             else
@@ -76,13 +73,13 @@ else
                         if [[ $excludedcount < 1 ]]; then
                             echo "Available balance ($balance) less than ($totalamount) ..."
                             echo "Entries from <$address> and below will not receive funds!"
-                            excludedjson=$(jq -n --arg addr $address --arg amt $amount '[{"address":$addr,"amount":$amt|tonumber}]')
+                            excludedjson=$(jq -n --arg addr $address --arg amt $amount '[{"address":$addr,"amount":$amt}]')
                         else
-                            excludedjson=$(echo $json | jq --arg addr $address --arg amt $amount '.[.|length] |= . + {"address":$addr,"amount":$amt|tonumber}')
+                            excludedjson=$(echo $json | jq --arg addr $address --arg amt $amount '.[.|length] |= . + {"address":$addr,"amount":$amt}')
                         fi
                         ((excludedcount++))
                 else
-                    json=$(echo $json | jq --arg addr $address --arg amt $amount '.[.|length] |= . + {"address":$addr,"amount":$amt|tonumber}')
+                    json=$(echo $json | jq --arg addr $address --arg amt $amount '.[.|length] |= . + {"address":$addr,"amount":$amt}')
 #                    echo "$json"
                     echo "$totalamount"
                 fi
