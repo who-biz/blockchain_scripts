@@ -93,7 +93,7 @@ else
         echo "$excludedjson" > $HOME/excluded_addresses_from_snapshot.json
         echo "Excluded addresses logged to $HOME/excluded_addresses_from_snapshot.json"
 
-        stringizedjson=$(echo $json | jq -sRr '. | sub("\n"; "") | gsub("\\s";"")')
+        stringizedjson=$(echo $json | jq -sRr '. | sub("\n";"")')
 #        stringizedjson=$(echo $json | jq -sj '.')
         z_sendmany="$cli -chain=$chain -stdin z_sendmany $fromaddr"
         echo "$z_sendmany"
