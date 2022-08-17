@@ -77,7 +77,7 @@ if [[ $enabled == "y" ]]; then
     echo "Captured amounts... $(($duration % 60)) seconds"
     echo "Packed and ready to begin...."
     for ((tlc = 0; tlc <= $LoopsCount; tlc++)); do
-        echo "${#vouts[@]} UTXOs left to consolitate..."
+        echo "${#vouts[@]} UTXOs left to consolidate..."
         SECONDS=0
         if [[ ${#vouts[@]} -ge $maxInc ]]; then
             makeRaw $maxInc
