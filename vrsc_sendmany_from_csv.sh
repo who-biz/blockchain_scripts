@@ -55,7 +55,7 @@ else
                 totalamount=$(echo "$totalamount + $amount" | bc -l)
                 if (( $(echo "$balance < $totalamount" |bc -l) )); then
 #                 if (( $counter > 50 )); then
-                        break
+#                        break
                         if [[ $excludedcount < 1 ]]; then
 #                            echo "Counter hit $counter entries, excluding the rest ..."
                             echo "Available balance ($balance) less than ($totalamount) ..."
