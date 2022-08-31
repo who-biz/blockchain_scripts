@@ -32,6 +32,8 @@ totalamount=0
 excludedjson=""
 excludedcount=0
 
+minamount="0.000001"
+
 if [[ -z "$1" ]]; then
     echo "Error: no csv file supplied."
     echo "Usage: \"./vrsc_sendmany_from_csv.sh <path_to_csv_file>\""
@@ -48,13 +50,24 @@ else
                 break
             fi
 
+            if (( $(echo "$amount <= $minamount" |bc -l) )); then
+                ((counter++))
+                continue
+            fi
+
+#            if (( $counter < 200 )); then
+#                ((counter++))
+#                continue
+#            fi
+
+#            if [[ $counter == 200 ]]; then
             if [[ $counter == 0 ]]; then
                 json=$(jq -n --arg addr $address --arg amt $amount '{($addr):$amt}')
                 totalamount=$amount
             else
                 totalamount=$(echo "$totalamount + $amount" | bc -l)
                 if (( $(echo "$balance < $totalamount" |bc -l) )); then
-#                 if (( $counter > 50 )); then
+#                 if (( $counter > 400 )); then
 #                        break
                         if [[ $excludedcount < 1 ]]; then
 #                            echo "Counter hit $counter entries, excluding the rest ..."
@@ -79,7 +92,7 @@ else
         echo "$excludedjson" > $HOME/excluded_addresses_from_snapshot.json
         echo "Excluded addresses logged to $HOME/excluded_addresses_from_snapshot.json"
 
-        stringizedjson=$(echo $json | jq -sRj '. | gsub(" ";"")')
+        stringizedjson=$(echo $json | jq -sRj '.')
         sendmany="$cli -chain=$chain -stdin sendmany \"\" "
         echo "$stringizedjson"
         txid=$(printf "%s" $stringizedjson | $sendmany)
