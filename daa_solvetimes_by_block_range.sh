@@ -20,6 +20,12 @@ if [[ -z $cli ]]; then
     exit
 fi
 
+if [[ -z $1 || -z $2 ]]; then
+    echo "This script requires two arguments to run.  Please specify lower bound block height as first arg, and upper bound block height as second arg."
+    echo "Example: ./daa_solvetimes_by_block_range.sh 1000 2000"
+    exit
+fi
+
 # change this to DAA window for chain in question
 daawindow=45
 
