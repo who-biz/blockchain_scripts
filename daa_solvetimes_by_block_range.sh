@@ -15,7 +15,12 @@ cli=""
 # example: chain="-chain=vrsctest"
 chain=""
 
-# change this to DAA window for 
+if [[ -z $cli ]]; then
+    echo "Please modify script with location to command-line interface binary. See script comments for details."
+    exit
+fi
+
+# change this to DAA window for chain in question
 daawindow=45
 
 counter=$1
