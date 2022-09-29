@@ -14,11 +14,11 @@ port=12122
 
 # change this location of verus cli, bitcoin-cli, etc
 # example cli="$HOME/VerusCoin/src/verus"
-cli="$HOME/chips-10sec/src/verus"
+cli="$HOME/verus/src/verus"
 
 # change this to relevant chain, ac_name, etc
 # example: chain="-chain=vrsctest"
-chain="chipstensec"
+chain="chips"
 
 balance=$($cli -chain=$chain getbalance)
 
