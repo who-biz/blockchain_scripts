@@ -32,9 +32,12 @@ numoutlierblocks=0
 while [ $counter -le $2 ]
 do
     getblock=$($getblocks$counter)
-    datetimestamp=$(echo $getblock | jq -r .timestamp)
+    getblockjson=$(echo $getblock)
+    datetimestamp=$(jq -r .timestamp <<<"$getblockjson")
+    powtype=$(jq -r .proof <<<"$getblockjson")
     timestamp=$(date +%s --date="$datetimestamp")
-    echo "$timestamp"
+#    echo "$powtype"
+#    echo "$timestamp"
     if [ $counter -eq $1 ]
     then
         timestamp1=$timestamp
@@ -53,10 +56,11 @@ do
         then
             # ignore outliers from genesis to DAA window
             upperbound=$difference
+	    upperboundpowtype=$powtype
         fi
     fi
     timestamp1=$timestamp
-    echo "$counter, $difference"
+    echo "height = $counter, blocktime = $difference, PoW Type = $powtype"
     totaltime=$(($totaltime + $difference))
     ((counter++))
 done
@@ -65,5 +69,5 @@ echo "total time = $totaltime"
 echo "total blocks = $totalblks"
 averagetime=$(($totaltime / $totalblks))
 echo "average time = $averagetime"
-echo "longest = $upperbound"
+echo "longest = $upperbound, PowType = $upperboundpowtype"
 echo "blocks with >$outlierthreshold sec solve time = $numoutlierblocks"
