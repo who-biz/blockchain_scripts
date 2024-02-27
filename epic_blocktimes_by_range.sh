@@ -19,7 +19,7 @@ daawindow=45
 # change this to your desired outlier threshold
 # stdout at conclusion of script will display count
 # of blocks in dataset with solve times larger than threshold
-outlierthreshold=100
+outlierthreshold=300
 
 counter=$1
 timestamp1=0
@@ -28,6 +28,9 @@ totalblks=$(($2 - $1))
 totaltime=0
 upperbound=0
 numoutlierblocks=0
+randomxoutliers=0
+progpowoutliers=0
+dilithiumoutliers=0
 
 # check that we have 2 arguments
 if [ -z "$2" ]
@@ -68,6 +71,22 @@ do
     if [ $difference -gt $outlierthreshold ]
     then
         ((numoutlierblocks++))
+        outlierblocktime=$difference
+        outlierpowtype=$powtype
+        outlierheight=$counter
+
+        echo "Outlier Data entry: height($outlierheight), powtype($outlierpowtype), blocktime($outlierblocktime)"
+
+        if [ "$outlierpowtype" == "RandomX" ]
+        then
+            ((randomxoutliers++))
+        elif [ "$outlierpowtype" == "Dilithium" ]
+        then
+            ((dilithiumoutliers++))
+        else
+            ((progpowoutliers++))
+        fi
+
     fi
     if [ $difference -gt $upperbound ]
     then
@@ -87,9 +106,13 @@ done
 
 
 # provide summary of data
+printf "\n\n"
 echo "total time = $totaltime"
 echo "total blocks = $totalblks"
 averagetime=$(($totaltime / $totalblks))
 echo "average time = $averagetime"
 echo "longest blocktime = $upperbound, PowType = $upperboundpowtype, at height = $upperboundheight"
-echo "blocks with >$outlierthreshold sec solve time = $numoutlierblocks"
+printf "blocks with >$outlierthreshold sec solve time = $numoutlierblocks\n-------------------------\n"
+
+echo "PoWType breakdown of blocks with >$outlierthreshold sec blocktime:"
+echo "RandomX = $randomxoutliers | Dilithium = $dilithiumoutliers | ProgPoW = $progpowoutliers"
