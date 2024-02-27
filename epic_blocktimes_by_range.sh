@@ -29,6 +29,25 @@ totaltime=0
 upperbound=0
 numoutlierblocks=0
 
+# check that we have 2 arguments
+if [ -z "$2" ]
+then
+    echo "You must enter 2 arguments: a lower bound, and an upper bound."
+    echo "Error: only one argument supplied."
+    echo "Usage: ./epic_blocktimes_by_range.sh <lowerbound> <upperbound>"
+    echo "Exiting..."
+    exit
+fi
+
+# check that upper bound is greater than lower bound
+if [ $1 -ge $2 ]
+then
+    echo "Please ensure your upper bound ($2) is greater than lower bound ($1)"
+    echo "Exiting..."
+    exit
+fi
+
+# crunch block data
 while [ $counter -le $2 ]
 do
     getblock=$($getblocks$counter)
@@ -57,6 +76,7 @@ do
             # ignore outliers from genesis to DAA window
             upperbound=$difference
 	    upperboundpowtype=$powtype
+	    upperboundheight=$counter
         fi
     fi
     timestamp1=$timestamp
@@ -65,9 +85,11 @@ do
     ((counter++))
 done
 
+
+# provide summary of data
 echo "total time = $totaltime"
 echo "total blocks = $totalblks"
 averagetime=$(($totaltime / $totalblks))
 echo "average time = $averagetime"
-echo "longest = $upperbound, PowType = $upperboundpowtype"
+echo "longest blocktime = $upperbound, PowType = $upperboundpowtype, at height = $upperboundheight"
 echo "blocks with >$outlierthreshold sec solve time = $numoutlierblocks"
