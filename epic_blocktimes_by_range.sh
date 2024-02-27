@@ -16,13 +16,18 @@ getblocks="curl -s -X GET $nodeurl:$nodeport/v1/headers/"
 # change this to DAA window for 
 daawindow=45
 
+# change this to your desired outlier threshold
+# stdout at conclusion of script will display count
+# of blocks in dataset with solve times larger than threshold
+outlierthreshold=100
+
 counter=$1
 timestamp1=0
 timestamp2=0
 totalblks=$(($2 - $1))
 totaltime=0
 upperbound=0
-numblocksgt100s=0
+numoutlierblocks=0
 
 while [ $counter -le $2 ]
 do
@@ -38,9 +43,9 @@ do
         timestamp2=$timestamp
     fi
     difference=$(($timestamp2 - $timestamp1))
-    if [ $difference -gt 100 ]
+    if [ $difference -gt $outlierthreshold ]
     then
-        ((numblksgt100s++))
+        ((numoutlierblocks++))
     fi
     if [ $difference -gt $upperbound ]
     then
@@ -61,4 +66,4 @@ echo "total blocks = $totalblks"
 averagetime=$(($totaltime / $totalblks))
 echo "average time = $averagetime"
 echo "longest = $upperbound"
-echo "blocks with >100s solve time = $numblksgt100s"
+echo "blocks with >$outlierthreshold sec solve time = $numoutlierblocks"
