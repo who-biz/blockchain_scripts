@@ -12,7 +12,7 @@
 cli=""
 
 # change this to relevant chain, ac_name, etc
-# example: chain="-chain=vrsctest"
+# example: chain="-testnet -chain=chips"
 chain=""
 
 if [[ -z $cli ]]; then
@@ -36,6 +36,8 @@ totalblks=$(($2 - $1))
 totaltime=0
 upperbound=0
 numblocksgt60s=0
+workcount=0
+stakecount=0
 
 while [ $counter -le $2 ]
 do
@@ -64,6 +66,12 @@ do
     fi
     timestamp1=$timestamp
     echo "$counter, $difference, $blocktype"
+    if [ $blocktype = "work" ]
+    then
+        ((workcount++))
+    else
+        ((stakecount++))
+    fi
     totaltime=$(($totaltime + $difference))
     ((counter++))
 done
@@ -74,5 +82,6 @@ averagetime=$(($totaltime / $totalblks))
 echo "average time = $averagetime"
 echo "longest = $upperbound"
 echo "blocks with >60s solve time = $numblksgt60s"
-
+echo "PoW block count = $workcount"
+echo "PoS block count = $stakecount"
 
